@@ -14,7 +14,7 @@ public class UnitControl : MonoBehaviour
     GameManager gm;
     Vector3 targetPos;
     Vector3 originPos;
-        Vector2 mousePosition;
+    Vector2 mousePosition;
     private void Start() 
     {
         gm = GameObject.Find("GameManager").GetComponent<GameManager>();
