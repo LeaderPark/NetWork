@@ -1499,33 +1499,5 @@ PrefabInstance:
       propertyPath: m_Name
       value: MyChar
       objectReference: {fileID: 0}
-    - target: {fileID: 5286926177660579590, guid: 1a6f5f096b64fd34ab8f20c1813bcc1c, type: 3}
-      propertyPath: m_TagString
-      value: Player
-      objectReference: {fileID: 0}
-    - target: {fileID: 5286926177660579591, guid: 1a6f5f096b64fd34ab8f20c1813bcc1c, type: 3}
-      propertyPath: m_Color.b
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5286926177660579591, guid: 1a6f5f096b64fd34ab8f20c1813bcc1c, type: 3}
-      propertyPath: m_Color.g
-      value: 0.78548574
-      objectReference: {fileID: 0}
-    - target: {fileID: 5286926177660579591, guid: 1a6f5f096b64fd34ab8f20c1813bcc1c, type: 3}
-      propertyPath: m_Color.r
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5286926177660579591, guid: 1a6f5f096b64fd34ab8f20c1813bcc1c, type: 3}
-      propertyPath: m_SortingLayer
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 5286926177660579591, guid: 1a6f5f096b64fd34ab8f20c1813bcc1c, type: 3}
-      propertyPath: m_SortingOrder
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5286926177660579591, guid: 1a6f5f096b64fd34ab8f20c1813bcc1c, type: 3}
-      propertyPath: m_SortingLayerID
-      value: 1855429841
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1a6f5f096b64fd34ab8f20c1813bcc1c, type: 3}

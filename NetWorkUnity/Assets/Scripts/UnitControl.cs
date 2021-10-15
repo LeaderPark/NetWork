@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 public class UnitControl : MonoBehaviour
 {
+    public GameObject frontHpBar;
     const float speed = 3.0f;
     public bool bMovable = false;
     GameManager gm;
@@ -57,5 +58,10 @@ public class UnitControl : MonoBehaviour
         {
             sr.color = col;
         }
+    }
+
+    void Hpbar()
+    {
+
     }
 }
