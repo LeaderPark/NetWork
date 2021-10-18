@@ -1066,6 +1066,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1347974680}
   m_CullTransparentMesh: 1
+--- !u!1 &1376527632 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 69452135, guid: 1a6f5f096b64fd34ab8f20c1813bcc1c, type: 3}
+  m_PrefabInstance: {fileID: 5286926177121473436}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1620903603
 GameObject:
   m_ObjectHideFlags: 0
@@ -1451,6 +1456,18 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 69452136, guid: 1a6f5f096b64fd34ab8f20c1813bcc1c, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 69452136, guid: 1a6f5f096b64fd34ab8f20c1813bcc1c, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.88
+      objectReference: {fileID: 0}
+    - target: {fileID: 69452136, guid: 1a6f5f096b64fd34ab8f20c1813bcc1c, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5286926177660579584, guid: 1a6f5f096b64fd34ab8f20c1813bcc1c, type: 3}
       propertyPath: m_RootOrder
       value: 1
@@ -1499,5 +1516,9 @@ PrefabInstance:
       propertyPath: m_Name
       value: MyChar
       objectReference: {fileID: 0}
+    - target: {fileID: 8292937969809321567, guid: 1a6f5f096b64fd34ab8f20c1813bcc1c, type: 3}
+      propertyPath: hpBar
+      value: 
+      objectReference: {fileID: 1376527632}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1a6f5f096b64fd34ab8f20c1813bcc1c, type: 3}

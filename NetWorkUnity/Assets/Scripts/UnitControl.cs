@@ -1,16 +1,24 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
+
 public class UnitControl : MonoBehaviour
 {
-    public GameObject frontHpBar;
     const float speed = 3.0f;
+    const int MAX_HP = 100;
+    const int DROP_HP = 4;
     public bool bMovable = false;
+    public ParticleSystem fxParticle;
+    public GameObject hpBar;
     GameManager gm;
     Vector3 targetPos;
     Vector3 orgPos;
     float timeToDest;
     float elapsed;
+    float elapsedDrop;
+    int currentHP;
+    int maxHP;
     bool bMoving;
     // Start is called before the first frame update
     void Start()
@@ -21,7 +29,11 @@ public class UnitControl : MonoBehaviour
         targetPos = orgPos;
         timeToDest = 0;
         bMoving = false;
+
+        maxHP = MAX_HP;
+        SetHP(MAX_HP);
     }
+
     // Update is called once per frame
     void Update()
     {
@@ -35,13 +47,20 @@ public class UnitControl : MonoBehaviour
                 bMoving = false;
             }
             else
-
             {
                 Vector3 newPos = Vector3.Lerp(orgPos, targetPos, elapsed / timeToDest);
                 transform.position = newPos;
             }
         }
+
+        elapsedDrop += Time.deltaTime;
+        if(elapsedDrop >= 1.0f)
+        {
+            elapsedDrop -= 1.0f;
+            DropHP(DROP_HP);
+        }
     }
+
     public void SetTargetPos(Vector3 pos)
     {
         orgPos = transform.position;
@@ -60,8 +79,17 @@ public class UnitControl : MonoBehaviour
         }
     }
 
-    void Hpbar()
+    private void SetHP(int hp)
     {
+        hp = Mathf.Clamp(hp, 0, maxHP);
+        currentHP = hp;
+        float value = (float)currentHP / (float)MAX_HP;
+        hpBar.transform.localScale = new Vector3(value,1,1);
+    }
 
+    private void DropHP(int hp)
+    {
+        currentHP -= hp;
+        SetHP(currentHP);
     }
 }
