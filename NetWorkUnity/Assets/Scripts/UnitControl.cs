@@ -8,6 +8,7 @@ public class UnitControl : MonoBehaviour
     const float speed = 3.0f;
     const int MAX_HP = 100;
     const int DROP_HP = 4;
+
     public bool bMovable = false;
     public ParticleSystem fxParticle;
     public GameObject hpBar;
@@ -17,9 +18,11 @@ public class UnitControl : MonoBehaviour
     float timeToDest;
     float elapsed;
     float elapsedDrop;
-    int currentHP;
+    public int currentHP;
     int maxHP;
     bool bMoving;
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -79,7 +82,7 @@ public class UnitControl : MonoBehaviour
         }
     }
 
-    private void SetHP(int hp)
+    public void SetHP(int hp)
     {
         hp = Mathf.Clamp(hp, 0, maxHP);
         currentHP = hp;
@@ -87,9 +90,23 @@ public class UnitControl : MonoBehaviour
         hpBar.transform.localScale = new Vector3(value,1,1);
     }
 
-    private void DropHP(int hp)
+    public void DropHP(int hp)
     {
         currentHP -= hp;
         SetHP(currentHP);
     }
+
+    public void StartFX()
+    {
+        if(currentHP > 0)
+        {
+            fxParticle.Play();
+        }
+    }
+
+    public void Revive()
+    {
+        SetHP(MAX_HP);
+    }
+
 }

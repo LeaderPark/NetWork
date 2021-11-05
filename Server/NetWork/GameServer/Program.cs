@@ -2,21 +2,24 @@
 using System.Threading;
 using System.Net.Sockets;
 using System.Text;
+using System.Timers;
+using System.Numerics;
 using System.Collections;
 using System.Net;
-using System.Timers;
 using System.Collections.Generic;
-using System.Numerics;
 
-namespace ConsoleApplication1
+namespace GmaeServer
 {
     class Program
     {
         const int TIMER_INTERVAL = 1000;
-        public const float SPEED_UNIT = 3.0f;
+        public const float SPEED_UNIT = 10.0f;
+        const float ATTACK_DISTANCE = 3.5f;
+        const string COMMAND_DAMAGE = "#Damage#";
+        const string STRING_TERMINATOR = ";";
 
         public static Hashtable clientsList = new Hashtable();
-        public static Dictionary<string, handleClient> movingUnit = new Dictionary<string, handleClient>();
+        public static Dictionary<string, handleClient> movingUnits = new Dictionary<string, handleClient>();
 
         private static int userCount = 0;
         //private static Mutex mut = new Mutex();
@@ -25,7 +28,7 @@ namespace ConsoleApplication1
         private static object lockSocket = new object();
         private static object lockMove = new object();
 
-        private static void SetTImer()
+        private static void SetTimer()
         {
             aTimer = new System.Timers.Timer(TIMER_INTERVAL);
 
@@ -34,24 +37,24 @@ namespace ConsoleApplication1
             aTimer.Enabled = true;
         }
 
-        private static void OnTimedEvent(object source, ElapsedEventArgs e)
+        private static void OnTimedEvent(Object source, ElapsedEventArgs e)
         {
             lock (lockMove)
             {
-                foreach (var client in movingUnit)
+                foreach (var client in movingUnits)
                 {
                     handleClient hc = client.Value;
-                    if(hc.bMoving)
+                    if (hc.bMoving)
                     {
-                        TimeSpan elapesd = DateTime.Now - hc.startTime;
-                        if(elapesd.TotalMilliseconds >= hc.timeArrive)
+                        TimeSpan elapsed = DateTime.Now - hc.startTime;
+                        if (elapsed.TotalMilliseconds >= hc.timeArrive)
                         {
                             hc.bMoving = false;
-                            Console.WriteLine("unit" + hc.clientID + " arrived");
+                            Console.WriteLine($"unit {hc.clientID} arrived");
                         }
                         else
                         {
-                            float ratio = (float)elapesd.TotalMilliseconds / (float)hc.timeArrive;
+                            float ratio = (float)elapsed.TotalMilliseconds / (float)hc.timeArrive;
                             hc.currentPos = Vector2.Lerp(hc.orgPos, hc.targetPos, ratio);
                         }
                     }
@@ -71,10 +74,10 @@ namespace ConsoleApplication1
                 byte[] bytesFrom = new byte[1024];
                 string dataFromClient = "";
 
-                SetTImer();
+                SetTimer();
 
                 serverSocket.Start();
-                Console.WriteLine("Chat Server Started ....");
+                Console.WriteLine("Game Server Started ....");
                 counter = 0;
                 while ((true))
                 {
@@ -82,7 +85,6 @@ namespace ConsoleApplication1
                     clientSocket = serverSocket.AcceptTcpClient();
 
                     dataFromClient = "";
-
                     /*
                     NetworkStream networkStream = clientSocket.GetStream();
                     int numBytesRead;
@@ -143,7 +145,7 @@ namespace ConsoleApplication1
         {
             //mut.WaitOne();
             Byte[] broadcastBytes = null;
-            List<object> deletedClients = new List<object>(); 
+            List<object> deletedClients = new List<object>();
 
             if (flag == true)
             {
@@ -153,6 +155,7 @@ namespace ConsoleApplication1
             {
                 broadcastBytes = Encoding.ASCII.GetBytes(msg);
             }
+
             lock (lockSocket)
             {
                 foreach (DictionaryEntry Item in clientsList)
@@ -171,20 +174,18 @@ namespace ConsoleApplication1
                     {
                         deletedClients.Add(Item.Key);
                     }
-
                 }
             }
 
             foreach (var item in deletedClients)
             {
-                TcpClient broadcastSocket;
+                TcpClient brodcastSocket;
                 handleClient hc = (handleClient)clientsList[item];
-                broadcastSocket = hc.clientSocket;
-                broadcastSocket.Close();
+                brodcastSocket = hc.clientSocket;
+                brodcastSocket.Close();
 
                 clientsList.Remove(item);
             }
-     
             //mut.ReleaseMutex();
         }  //end broadcast function
 
@@ -212,9 +213,41 @@ namespace ConsoleApplication1
         {
             lock (lockMove)
             {
-                if(!movingUnit.ContainsKey(client.clientID))
+                if (!movingUnits.ContainsKey(client.clientID))
                 {
-                    movingUnit.Add(client.clientID, client);
+                    movingUnits.Add(client.clientID, client);
+                }
+            }
+        }
+
+        public static void CheckAndBroadcastDamage(string attackerID)
+        {
+            lock (lockMove)
+            {
+                handleClient hc = movingUnits[attackerID];
+                string msg = "";
+                foreach (var unit in movingUnits)
+                {
+                    handleClient client = unit.Value;
+                    if (hc.clientID != client.clientID)
+                    {
+                        float distance = Vector2.Distance(hc.currentPos, client.currentPos);
+                        if (distance < ATTACK_DISTANCE)
+                        {
+                            if (msg.Length > 0)
+                            {
+                                msg += ",";
+                            }
+                            msg += client.clientID;
+                        }
+                    }
+                }
+
+                Console.WriteLine($"Damage = {msg}");
+                if (msg.Length > 0)
+                {
+                    msg = $"${COMMAND_DAMAGE}{msg}";
+                    broadcast(msg, hc.clientID, false);
                 }
             }
         }
@@ -231,6 +264,8 @@ namespace ConsoleApplication1
         const string COMMAND_MOVE = "#Move#";
         const string COMMAND_ENTER = "#Enter#";
         const string COMMAND_HISTORY = "#History#";
+        const string COMMAND_ATTACK = "#Attack#";
+        const char CHAR_TERMINATOR = ';';
 
         public TcpClient clientSocket;
         public int userID;
@@ -290,6 +325,7 @@ namespace ConsoleApplication1
 
                 history += hc.clientID + "," + hc.targetPosX.ToString() + "," + hc.targetPosY.ToString();
             }
+            history += CHAR_TERMINATOR.ToString();
 
             Console.WriteLine("final history = " + history);
 
@@ -343,8 +379,9 @@ namespace ConsoleApplication1
                             {
                                 // get the ID part only
                                 clientID = dataFromClient.Substring(0, idx);
+                                Program.SetUnitMove(this);
                                 Console.WriteLine(clientID + " enters chat room.");
-                                Program.broadcast(clientID + "$" + COMMAND_ENTER, clientID, false);
+                                Program.broadcast(clientID + "$" + COMMAND_ENTER + CHAR_TERMINATOR.ToString(), clientID, false);
                                 SendHistory(networkStream);
                             }
 
@@ -355,30 +392,8 @@ namespace ConsoleApplication1
                                 dataFromClient = dataFromClient.Substring(pos, dataFromClient.Length - pos);
                                 Console.WriteLine("From client - " + clientID + " : " + dataFromClient);
 
-                                // 비지니스 로직의 처리
-                                if (dataFromClient.StartsWith(COMMAND_MOVE))
-                                {
-                                    string remain = dataFromClient.Substring(COMMAND_MOVE.Length);
-                                    var strs = remain.Split(',');
-                                    try
-                                    {
-                                        orgPos = currentPos;
-                                        targetPosX = float.Parse(strs[0]);
-                                        targetPosY = float.Parse(strs[1]);
-                                        targetPos.X = targetPosX;
-                                        targetPos.Y = targetPosY;
-                                        startTime = DateTime.Now;
-                                        timeArrive = (int)(Vector2.Distance(orgPos, targetPos) * 1000f / Program.SPEED_UNIT);
-                                        bMoving = true;
+                                ProcessCommand(clientID, dataFromClient);
 
-                                        Program.SetUnitMove(this);
-                                        Console.WriteLine("Unit moving start - " + clientID + " to " + targetPosX + "," + targetPosY);
-                                    }
-                                    catch (Exception e)
-                                    {   
-
-                                    }
-                                }
                                 Program.broadcast(dataFromClient, clientID, true);
                             }
                             else
@@ -401,5 +416,70 @@ namespace ConsoleApplication1
             Program.broadcast("User left:" + clientID, "", false);
 
         }//end doChat
+
+        private string DeleteTerminator(string remain)
+        {
+            int idx = remain.IndexOf(CHAR_TERMINATOR);
+            if (idx >= 0)
+            {
+                remain = remain.Substring(0, idx);
+            }
+            return remain;
+        }
+
+        private void ProcessMove(string clientId, string remain)
+        {
+            var strs = remain.Split(',');
+
+            try
+            {
+                orgPos = currentPos;
+                targetPosX = float.Parse(strs[0]);
+                targetPosY = float.Parse(strs[1]); // 여기서 에러
+                targetPos.X = targetPosX;
+                targetPos.Y = targetPosY;
+                startTime = DateTime.Now;
+                timeArrive = (int)(Vector2.Distance(orgPos, targetPos) * 1000.0f / Program.SPEED_UNIT);
+                bMoving = true;
+
+                //Program.SetUnitMove(this);
+                Console.WriteLine($"Unit moving start - {clientID} to {targetPosX},{targetPosY}");
+            }
+            catch (Exception e)
+            {
+
+                Console.WriteLine($"움직임 에러");
+            }
+        }
+
+        private void ProcessAttack(string clientID)
+        {
+            Console.WriteLine($"Attack - {clientID}");
+            Program.CheckAndBroadcastDamage(clientID);
+        }
+
+        private void ProcessCommand(string clientID, string dataFromClient)
+        {
+            if (dataFromClient[0] == '#')
+            {
+                string command;
+                string remain;
+                int idx = dataFromClient.IndexOf('#', 1);
+                if (idx > 1)
+                {
+                    command = dataFromClient.Substring(0, idx + 1);
+                    switch (command)
+                    {
+                        case COMMAND_MOVE:
+                            remain = DeleteTerminator(dataFromClient.Substring(idx + 1));
+                            ProcessMove(clientID, remain);
+                            break;
+                        case COMMAND_ATTACK:
+                            ProcessAttack(clientID);
+                            break;
+                    }
+                }
+            }
+        }
     } //end class handleClinet
 }//end namespace
